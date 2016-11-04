@@ -9,7 +9,7 @@
     opacity:.95;
     transition: all .5s ease;
 }
-.calendar-enter, .calendar-leave {
+.calendar-enter, .calendar-leave-active {
     opacity: 0;
     transform: translate3d(0,-10px, 0);
 }
@@ -60,7 +60,7 @@
 .calendar-next{
     float:right;
 }
- 
+
 
 .calendar table {
     clear: both;
@@ -83,7 +83,7 @@
 
 .calendar td.week{
     pointer-events:none !important;
-    cursor: default !important;    
+    cursor: default !important;
 }
 .calendar td.disabled {
     color: #c0c0c0;
@@ -110,7 +110,7 @@
 }
 
 .calendar thead td {
-  text-transform: uppercase;
+    text-transform: uppercase;
 }
 .calendar .timer{
     margin:10px 0;
@@ -156,26 +156,27 @@
 .calendar .lunar{
      font-size:11px;
      line-height: 150%;
-     color:#aaa;   
+     color:#aaa;
 }
 .calendar td.selected .lunar{
-     color:#fff;   
+     color:#fff;
 }
 </style>
 
 <template>
-    <div @click.stop=""  class="calendar" v-show="show" :style="{'left':x+'px','top':y+'px'}" transition="calendar" transition-mode="out-in">
-        <div  v-if="type!='time'">
+    <transition name="calendar">
+    <div @click.stop=""    class="calendar" v-show="show" :style="{'left':x+'px','top':y+'px'}">
+        <div    v-if="type!='time'">
             <div class="calendar-tools">
                 <span class="calendar-prev" @click="prev">
                     <svg width="16" height="16" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g class="transform-group"><g transform="scale(0.015625, 0.015625)"><path d="M671.968 912c-12.288 0-24.576-4.672-33.952-14.048L286.048 545.984c-18.752-18.72-18.752-49.12 0-67.872l351.968-352c18.752-18.752 49.12-18.752 67.872 0 18.752 18.72 18.752 49.12 0 67.872l-318.016 318.048 318.016 318.016c18.752 18.752 18.752 49.12 0 67.872C696.544 907.328 684.256 912 671.968 912z" fill="#5e7a88"></path></g></g></svg>
                 </span>
-                <span class="calendar-next"  @click="next">
+                <span class="calendar-next"    @click="next">
                     <svg width="16" height="16" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g class="transform-group"><g transform="scale(0.015625, 0.015625)"><path d="M761.056 532.128c0.512-0.992 1.344-1.824 1.792-2.848 8.8-18.304 5.92-40.704-9.664-55.424L399.936 139.744c-19.264-18.208-49.632-17.344-67.872 1.888-18.208 19.264-17.376 49.632 1.888 67.872l316.96 299.84-315.712 304.288c-19.072 18.4-19.648 48.768-1.248 67.872 9.408 9.792 21.984 14.688 34.56 14.688 12 0 24-4.48 33.312-13.44l350.048-337.376c0.672-0.672 0.928-1.6 1.6-2.304 0.512-0.48 1.056-0.832 1.568-1.344C757.76 538.88 759.2 535.392 761.056 532.128z" fill="#5e7a88"></path></g></g></svg>
                 </span>
                 <div class="text center">
-                    <input type="text" v-model="year" value="{{year}}" @change="render(year,month)" min="1970" max="2100" maxlength="4">
-                     / 
+                    <input type="text" v-model="year" :value="year" @change="render(year,month)" min="1970" max="2100" maxlength="4">
+                     /&nbsp;&nbsp;&nbsp;
                     {{monthString}}
                 </div>
             </div>
@@ -185,25 +186,25 @@
                     <td v-for="week in weeks" class="week">{{week}}</td>
                 </tr>
              </thead>
-            <tr v-for="(k1,day) in days">
-                <td 
-                v-for="(k2,child) in day" 
+            <tr v-for="(day,k1) in days">
+                <td
+                v-for="(child,k2) in day"
                 :class="{'selected':child.selected,'disabled':child.disabled}"
                 @click="select(k1,k2,$event)" @touchstart="select(k1,k2,$event)">
                 <span>{{child.day}}</span>
-                <div class="lunar" v-if="showLunar">{{child.lunar}}</div>
+
                 </td>
             </tr>
             </table>
         </div>
         <div class="calendar-time" v-show="type=='datetime'||type=='time'">
- 
+
             <div class="timer">
-                <input type="text" v-model="hour" value="{{hour}}" min="0" max="23" maxlength="2">
+                <input type="text" v-model="hour" :value="hour" min="0" max="23" maxlength="2">
                 时
-                <input type="text" v-model="minute" value="{{minute}}" min="0" max="59" maxlength="2">
+                <input type="text" v-model="minute" :value="minute" min="0" max="59" maxlength="2">
                 分
-                <input type="text" v-model="second" value="{{second}}" min="0" max="59" maxlength="2">
+                <input type="text" v-model="second" :value="second" min="0" max="59" maxlength="2">
                 秒
             </div>
         </div>
@@ -212,6 +213,7 @@
             <span @click="cancel" class="cancel">取消</span>
         </div>
     </div>
+    </transition>
 </template>
 
 <script>
@@ -219,7 +221,6 @@ export default {
     props: {
         show: {
             type: Boolean,
-            twoWay: true,
             default: false
         },
         type: {
@@ -228,7 +229,6 @@ export default {
         },
         value: {
             type: String,
-            twoWay: true,
             default: ""
         },
         x: {
@@ -241,7 +241,6 @@ export default {
         },
         begin: {
             type: String,
-            twoWay: true,
             default: ""
         },
         end: {
@@ -262,7 +261,6 @@ export default {
         },
         sep:{
             type: String,
-            twoWay: true,
             default: ""
         },
         weeks: {
@@ -293,7 +291,7 @@ export default {
         }
     },
     created() {
-        this.init()
+        this.beforeCreate()
         // 延迟绑定事件，防止关闭
         window.setTimeout(() => {
             document.addEventListener('click', (e) => {
@@ -308,10 +306,10 @@ export default {
         //     console.log("new %s old %s time:%s", val, old, +new Date)
         // },
         show(){
-            this.init()
+            this.beforeCreate()
         },
         value(){
-            this.init()
+            this.beforeCreate()
         }
     },
     methods: {
@@ -320,19 +318,19 @@ export default {
             return n < 10 ? '0' + n : n
         },
         // 初始化一些东西
-        init(){
+        beforeCreate(){
             var now = new Date();
-            if (this.value != "") {
-                if (this.value.indexOf("-") != -1) this.sep = "-"
-                if (this.value.indexOf(".") != -1) this.sep = "."
-                if (this.value.indexOf("/") != -1) this.sep = "/"
+            if (this.$store.state.calendar.value != "") {
+                if (this.$store.state.calendar.value.indexOf("-") != -1) this.sep = "-"
+                if (this.$store.state.calendar.value.indexOf(".") != -1) this.sep = "."
+                if (this.$store.state.calendar.value.indexOf("/") != -1) this.sep = "/"
                 if (this.type == "date") {
-                    var split = this.value.split(this.sep)
+                    var split = this.$store.state.calendar.value.split(this.sep)
                     this.year = parseInt(split[0])
                     this.month = parseInt(split[1]) - 1
                     this.day = parseInt(split[2])
                 } else if (this.type == "datetime") {
-                    var split = this.value.split(" ")
+                    var split = this.$store.state.calendar.value.split(" ")
                     var splitDate = split[0].split(this.sep)
                     this.year = parseInt(splitDate[0])
                     this.month = parseInt(splitDate[1]) - 1
@@ -345,12 +343,12 @@ export default {
                     }
                 }
                 if (this.range) {
-                    var split = this.value.split(" ~ ")
+                    var split = this.$store.state.calendar.value.split(" ~ ")
                     if (split.length > 1) {
                         var beginSplit = split[0].split(this.sep)
                         var endSplit = split[1].split(this.sep)
-                        this.rangeBegin = [parseInt(beginSplit[0]), parseInt(beginSplit[1] - 1), parseInt(beginSplit[2])]
-                        this.rangeEnd = [parseInt(endSplit[0]), parseInt(endSplit[1] - 1), parseInt(endSplit[2])]
+                        this.$store.state.calendar.rangeBegin = [parseInt(beginSplit[0]), parseInt(beginSplit[1] - 1), parseInt(beginSplit[2])]
+                        this.$store.state.calendar.rangeEnd = [parseInt(endSplit[0]), parseInt(endSplit[1] - 1), parseInt(endSplit[2])]
                     }
                 }
             } else {
@@ -362,8 +360,8 @@ export default {
                 this.minute = this.zero(now.getMinutes())
                 this.second = this.zero(now.getSeconds())
                 if (this.range) {
-                    this.rangeBegin = Array
-                    this.rangeEnd = Array
+                    this.$store.state.calendar.rangeBegin = Array
+                    this.$store.state.calendar.rangeEnd = Array
                 }
             }
             this.monthString=this.months[this.month]
@@ -372,15 +370,15 @@ export default {
         // 渲染日期
         render(y, m) {
             if (!this.range) {
-                this.rangeBegin = []
-                this.rangeEnd = []
+                this.$store.state.calendar.rangeBegin = []
+                this.$store.state.calendar.rangeEnd = []
             }
             var firstDayOfMonth = new Date(y, m, 1).getDay()         //当月第一天
             var lastDateOfMonth = new Date(y, m + 1, 0).getDate()    //当月最后一天
             var lastDayOfLastMonth = new Date(y, m, 0).getDate()     //最后一月的最后一天
             this.year = y
             this.currentMonth = this.months[m]
-            var seletSplit = this.value.split(" ")[0].split(this.sep)
+            var seletSplit = this.$store.state.calendar.value.split(" ")[0].split(this.sep)
 
             var i, line = 0,temp = []
             for (i = 1; i <= lastDateOfMonth; i++) {
@@ -399,15 +397,15 @@ export default {
                         k++;
                     }
                 }
-       
+
                 // 如果是日期范围
                 if (this.range) {
                     var options = {
                         day: i
                     }
-                    if (this.rangeBegin.length > 0) {
-                        var beginTime = Number(new Date(this.rangeBegin[0], this.rangeBegin[1], this.rangeBegin[2]))
-                        var endTime = Number(new Date(this.rangeEnd[0], this.rangeEnd[1], this.rangeEnd[2]))
+                    if (this.$store.state.calendar.rangeBegin.length > 0) {
+                        var beginTime = Number(new Date(this.$store.state.calendar.rangeBegin[0], this.$store.state.calendar.rangeBegin[1], this.$store.state.calendar.rangeBegin[2]))
+                        var endTime = Number(new Date(this.$store.state.calendar.rangeEnd[0], this.$store.state.calendar.rangeEnd[1], this.$store.state.calendar.rangeEnd[2]))
                         var thisTime = Number(new Date(this.year, this.month, i))
                         if (beginTime <= thisTime && endTime >= thisTime) {
                             options.selected = true
@@ -432,7 +430,7 @@ export default {
                     }
 
                      // 没有默认值的时候显示选中今天日期
-                    else if (chkY == this.year && chkM == this.month && i == this.day && this.value == "") {
+                    else if (chkY == this.year && chkM == this.month && i == this.day && this.$store.state.calendar.value == "") {
                         temp[line].push({
                             day: i,
                             selected: true
@@ -462,7 +460,7 @@ export default {
                                 parseInt(endSplit[1]) - 1,
                                 parseInt(endSplit[2])
                             ))
-                            if (endTime <  Number(new Date(this.year, this.month, i))) options.disabled = true
+                            if (endTime <    Number(new Date(this.year, this.month, i))) options.disabled = true
                         }
                         temp[line].push(options)
                     }
@@ -497,7 +495,7 @@ export default {
             this.monthString=this.months[this.month]
             this.render(this.year, this.month)
         },
-        //  下月
+        //    下月
         next(e) {
             e.stopPropagation()
             if (this.month == 11) {
@@ -514,18 +512,18 @@ export default {
             if (e != undefined) e.stopPropagation()
                 // 日期范围
             if (this.range) {
-                if (this.rangeBegin.length == 0 || this.rangeEndTemp != 0) {
-                    this.rangeBegin = [this.year, this.month, this.days[k1][k2].day, this.hour, this.minute, this.second]
-                    this.rangeBeginTemp = this.rangeBegin
-                    this.rangeEnd = [this.year, this.month, this.days[k1][k2].day, this.hour, this.minute, this.second]
-                    this.rangeEndTemp = 0
+                if (this.$store.state.calendar.rangeBegin.length == 0 || this.$store.state.calendar.rangeEndTemp != 0) {
+                    this.$store.state.calendar.rangeBegin = [this.year, this.month, this.days[k1][k2].day, this.hour, this.minute, this.second]
+                    this.$store.state.calendar.rangeBeginTemp = this.$store.state.calendar.rangeBegin
+                    this.$store.state.calendar.rangeEnd = [this.year, this.month, this.days[k1][k2].day, this.hour, this.minute, this.second]
+                    this.$store.state.calendar.rangeEndTemp = 0
                 } else {
-                    this.rangeEnd = [this.year, this.month, this.days[k1][k2].day, this.hour, this.minute, this.second]
-                    this.rangeEndTemp = 1
+                    this.$store.state.calendar.rangeEnd = [this.year, this.month, this.days[k1][k2].day, this.hour, this.minute, this.second]
+                    this.$store.state.calendar.rangeEndTemp = 1
                         // 判断结束日期小于开始日期则自动颠倒过来
-                    if (+new Date(this.rangeEnd[0], this.rangeEnd[1], this.rangeEnd[2]) < +new Date(this.rangeBegin[0], this.rangeBegin[1], this.rangeBegin[2])) {
-                        this.rangeBegin = this.rangeEnd
-                        this.rangeEnd = this.rangeBeginTemp
+                    if (+new Date(this.$store.state.calendar.rangeEnd[0], this.$store.state.calendar.rangeEnd[1], this.$store.state.calendar.rangeEnd[2]) < +new Date(this.$store.state.calendar.rangeBegin[0], this.$store.state.calendar.rangeBegin[1], this.$store.state.calendar.rangeBegin[2])) {
+                        this.$store.state.calendar.rangeBegin = this.$store.state.calendar.rangeEnd
+                        this.$store.state.calendar.rangeEnd = this.$store.state.calendar.rangeBeginTemp
                     }
                 }
                 this.render(this.year, this.month)
@@ -539,8 +537,8 @@ export default {
                 this.day = this.days[k1][k2].day
                 this.today = [k1, k2]
                 if (this.type == 'date') {
-                    this.value = this.year + this.sep + this.zero(this.month + 1) + this.sep + this.zero(this.days[k1][k2].day)
-                    this.show = false
+                    this.$store.state.calendar.value = this.year + this.sep + this.zero(this.month + 1) + this.sep + this.zero(this.days[k1][k2].day)
+                    this.$store.state.calendar.show = false
                 }
             }
 
@@ -559,24 +557,24 @@ export default {
                 })
                 if(!isSelected)return false
             }
-           
+
             if (this.range) {
-                this.value = this.output(this.rangeBegin) + " ~ " + this.output(this.rangeEnd)
+                this.$store.state.calendar.value = this.output(this.$store.state.calendar.rangeBegin) + " ~ " + this.output(this.$store.state.calendar.rangeEnd)
             } else {
-                this.value = this.output([
+                this.$store.state.calendar.value = this.output([
                     this.year,
-                    this.month, 
+                    this.month,
                     this.day,
                     parseInt(this.hour),
                     parseInt(this.minute),
                     parseInt(this.second)
                 ])
             }
-            this.show = false
+            this.$store.state.calendar.show = false
         },
         // 隐藏控件
         cancel() {
-            this.show = false
+            this.$store.state.calendar.show = false
         },
         // 格式化输出
         output(args) {
@@ -593,4 +591,3 @@ export default {
     }
 }
 </script>
- 
